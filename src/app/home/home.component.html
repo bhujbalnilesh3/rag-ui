@@ -1,0 +1,76 @@
+<br>
+<div class="home-container">
+    <div class="header">
+        <h2>Documents List</h2>
+        <button class="btn-signout" (click)="signOut()" title="Sign Out" aria-label="Sign Out">
+            Sign Out
+        </button>
+    </div>
+
+    <div class="upload-section">
+        <button class="btn-upload" *ngIf="!showUploadForm" (click)="showUploadForm = true">
+            + Upload New Document
+        </button>
+
+        <form *ngIf="showUploadForm" (submit)="onUploadSubmit($event)" class="upload-form" novalidate>
+            <input type="text" placeholder="Enter document title" [(ngModel)]="newDocTitle" name="title" required
+                minlength="3" maxlength="100" class="input-title" />
+
+            <input type="file" (change)="onFileSelected($event)" required accept=".pdf,.doc,.docx,.txt"
+                class="input-file" />
+
+            <button type="submit" class="btn-submit" [disabled]="!newDocTitle || !selectedFile">
+                Upload
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancelUpload()">Cancel</button>
+        </form>
+    </div>
+
+    <div class="header-with-refresh">
+        <div></div>
+        <button class="btn-chatbot" title="Open Chatbot" aria-label="Open Chatbot" [routerLink]="['/rag/chat']">
+            💬
+        </button>
+        <button class="btn-refresh" title="Refresh documents" (click)="refreshDocuments()" aria-label="Refresh documents">
+            🔄
+        </button>
+    </div>
+
+    <div *ngIf="loading">Loading documents...</div>
+    <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+    <table *ngIf="!loading && !error && documents.length > 0" class="docs-table">
+        <thead>
+            <tr>
+                <th>ID (UUID)</th>
+                <th>Title</th>
+                <th>Created At</th>
+                <th>Uploaded By</th>
+                <th>Processed</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let doc of documents">
+                <td>{{ doc.id }}</td>
+                <td>{{ doc.title }}</td>
+                <td>{{ doc.created_at | date: 'medium' }}</td>
+                <td>{{ doc.uploaded_by || '-' }}</td>
+                <td>
+                    <span [class.processed]="doc.processed" [class.not-processed]="!doc.processed">
+                        {{ doc.processed ? 'Yes' : 'No' }}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-download" (click)="downloadDocument(doc.id)" title="Download document">
+                        ⬇️
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div *ngIf="!loading && !error && documents.length === 0">
+        No documents found.
+    </div>
+</div>

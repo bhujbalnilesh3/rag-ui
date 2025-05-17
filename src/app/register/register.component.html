@@ -1,0 +1,107 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2 class="title">Create Your Account</h2>
+    <form (ngSubmit)="onSubmit()" #regForm="ngForm" novalidate>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          [(ngModel)]="username"
+          required
+          minlength="3"
+          maxlength="20"
+          #usernameCtrl="ngModel"
+          class="form-control"
+          placeholder="Enter username" />
+        <div *ngIf="usernameCtrl.invalid && usernameCtrl.touched" class="error-msg">
+          Username is required (3-20 characters).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          required
+          email
+          #emailCtrl="ngModel"
+          class="form-control"
+          placeholder="Enter email" />
+        <div *ngIf="emailCtrl.invalid && emailCtrl.touched" class="error-msg">
+          Valid email is required.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          minlength="6"
+          #passwordCtrl="ngModel"
+          class="form-control"
+          placeholder="Enter password" />
+        <div *ngIf="passwordCtrl.touched && password.length < 6" class="error-msg">
+          Password must be at least 6 characters.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          required
+          #confirmPasswordCtrl="ngModel"
+          class="form-control"
+          placeholder="Confirm password" />
+        <div
+          *ngIf="confirmPasswordCtrl.touched && confirmPassword !== password"
+          class="error-msg">
+          Passwords do not match.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select
+          id="role"
+          name="role"
+          [(ngModel)]="role"
+          required
+          #roleCtrl="ngModel"
+          class="form-control">
+          <option value="" disabled>Select role</option>
+          <option value="admin">Admin</option>
+          <option value="editor">Editor</option>
+          <option value="viewer">Viewer</option>
+        </select>
+        <div *ngIf="roleCtrl.invalid && roleCtrl.touched" class="error-msg">
+          Role is required.
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="
+          regForm.invalid ||
+          password.length < 6 ||
+          confirmPassword !== password
+        ">
+        Register
+      </button>
+    </form>
+  </div>
+</div>

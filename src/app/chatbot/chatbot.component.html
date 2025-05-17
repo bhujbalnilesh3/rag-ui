@@ -1,0 +1,31 @@
+<div class="container">
+<div class="chatbot-container">
+    <div class="chat-header">
+      <h3>Chatbot</h3>
+    </div>
+  
+    <div class="chat-messages" #messageContainer>
+      <div *ngFor="let msg of messages" [ngClass]="{'user-msg': msg.from === 'user', 'bot-msg': msg.from === 'bot'}" class="chat-message">
+        {{ msg.text }}
+      </div>
+    </div>
+  
+    <form (ngSubmit)="sendMessage()" class="chat-input-form" #chatForm="ngForm" novalidate>
+      <input
+        type="text"
+        name="message"
+        [(ngModel)]="userInput"
+        placeholder="Type your message..."
+        required
+        minlength="1"
+        class="chat-input"
+        autocomplete="off"
+      />
+      <button type="submit" [disabled]="!userInput.trim()" class="btn-send">Send</button>
+    </form>
+    
+  </div>
+  <button class="btn-home" title="Go to Home" aria-label="Go to Home" [routerLink]="['/home']">
+    🏠
+  </button>
+</div>

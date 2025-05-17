@@ -1,0 +1,26 @@
+.rag-status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border-bottom: 2px solid #ddd;
+    z-index: 1050; /* higher than Bootstrap navbars */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+    user-select: none;
+  }
+  
+  .rag-item {
+    cursor: default;
+    font-size: 0.95rem;
+  }
+  
+  .rag-circle {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+  }
+  
