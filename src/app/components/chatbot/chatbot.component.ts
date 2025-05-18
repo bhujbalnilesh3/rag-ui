@@ -30,7 +30,7 @@ export class ChatbotComponent implements AfterViewChecked {
 
     // Fake bot response after a delay
     setTimeout(() => {
-      this.messages.push({ text: "I'm a bot 🤖, here to assist you!", from: 'bot' });
+      this.messages.push({ text: "I'm a bot 🤖, but still under development. Please come back once I am ready.!", from: 'bot' });
     }, 800);
 
     this.userInput = '';

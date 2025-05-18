@@ -9,35 +9,42 @@
 
     <div class="upload-section">
         <button class="btn-upload" *ngIf="!showUploadForm" (click)="showUploadForm = true">
-            + Upload New Document
+            + Upload Document
         </button>
 
-        <form *ngIf="showUploadForm" (submit)="onUploadSubmit($event)" class="upload-form" novalidate>
-            <input type="text" placeholder="Enter document title" [(ngModel)]="newDocTitle" name="title" required
-                minlength="3" maxlength="100" class="input-title" />
+        <form *ngIf="showUploadForm" (submit)="onUploadSubmit($event)" novalidate>
+            <div *ngIf="title.invalid && (title.dirty || title.touched)" class="error">
+                <p *ngIf="title.errors?.['required']">Title is required.</p>
+                <p *ngIf="title.errors?.['minlength']">Title must be at least 3 characters long.</p>
+                <p *ngIf="title.errors?.['maxlength']">Title cannot exceed 100 characters.</p>
+            </div>
+            <div class="upload-form">
+                <input #title="ngModel" type="text" placeholder="Enter document title" [(ngModel)]="newDocTitle" name="title" required
+                    minlength="3" maxlength="100" class="input-title" />
 
-            <input type="file" (change)="onFileSelected($event)" required accept=".pdf,.doc,.docx,.txt"
-                class="input-file" />
+                <input type="file" (change)="onFileSelected($event)" required accept=".pdf,.doc,.docx,.txt"
+                    class="input-file" />
 
-            <button type="submit" class="btn-submit" [disabled]="!newDocTitle || !selectedFile">
-                Upload
-            </button>
-            <button type="button" class="btn-cancel" (click)="cancelUpload()">Cancel</button>
+                <button type="submit" class="btn-submit" [disabled]="!newDocTitle || !selectedFile">
+                    Upload
+                </button>
+                <button type="button" class="btn-cancel" (click)="cancelUpload()">Cancel</button>
+            </div>
         </form>
     </div>
 
     <div class="header-with-refresh">
         <div></div>
-        <button class="btn-chatbot" title="Open Chatbot" aria-label="Open Chatbot" [routerLink]="['/rag/chat']">
+        <button class="btn-chatbot" title="Open Chatbot" aria-label="Open Chatbot" [routerLink]="['/chat']">
             💬
         </button>
-        <button class="btn-refresh" title="Refresh documents" (click)="refreshDocuments()" aria-label="Refresh documents">
+        <button class="btn-refresh" title="Refresh documents" (click)="refreshDocuments()"
+            aria-label="Refresh documents">
             🔄
         </button>
     </div>
 
-    <div *ngIf="loading">Loading documents...</div>
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
+    <div *ngIf="uploaderrorMessage" class="alert alert-danger error-msg">{{ uploaderrorMessage }}</div>
 
     <table *ngIf="!loading && !error && documents.length > 0" class="docs-table">
         <thead>
@@ -45,25 +52,31 @@
                 <th>Job ID</th>
                 <th>Title</th>
                 <th>Created At</th>
-                <th>Uploaded By</th>
-                <th>Processed</th>
+                <th>Created By</th>
+                <th>Embeddings Present</th>
                 <th>Download</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let doc of documents">
-                <td>{{ doc.id }}</td>
+            <tr *ngFor="let doc of paginatedDocuments">
+                <td>{{ doc.documentid }}</td>
                 <td>{{ doc.title }}</td>
                 <td>{{ doc.created_at | date: 'medium' }}</td>
-                <td>{{ doc.uploaded_by || '-' }}</td>
-                <td>
+                <td class="center">{{ doc.uploaded_by || '-' }}</td>
+                <td class="center">
                     <span [class.processed]="doc.processed" [class.not-processed]="!doc.processed">
                         {{ doc.processed ? 'Yes' : 'No' }}
                     </span>
                 </td>
                 <td>
-                    <button class="btn-download" (click)="downloadDocument(doc.id)" title="Download document">
+                    <button class="btn-download" (click)="downloadDocument(doc.documentid, doc.title)" title="Download document">
                         ⬇️
+                    </button>
+                </td>
+                <td>
+                    <button class="btn-delete" (click)="deleteDocument(doc.documentid)" title="Delete document">
+                        🗑️
                     </button>
                 </td>
             </tr>
@@ -72,5 +85,14 @@
 
     <div *ngIf="!loading && !error && documents.length === 0">
         No documents found.
+    </div>
+
+    <app-loader [isLoading]="loading"></app-loader>
+
+    <!-- Pagination Controls -->
+    <div class="pagination" *ngIf="!loading && !error && totalPages > 1">
+        <button class="btn-page" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button class="btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
     </div>
 </div>

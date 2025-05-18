@@ -6,98 +6,140 @@ import { RouterModule } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
+import { DocumentService } from '../../services/document/document.service';
+import { LoaderComponent } from '../loader/loader.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule, RouterModule],
+  imports: [CommonModule, HttpClientModule, FormsModule, RouterModule, LoaderComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
   documents: Array<{
-    id: string;
+    documentid: string;
     title: string;
     created_at: string;
-    uploaded_by?: string;
+    uploaded_by: string;
     processed: boolean;
   }> = [];
 
+  paginatedDocuments:any = [];
   loading = false;
   error = '';
+  uploaderrorMessage = '';
   showUploadForm = false;
   newDocTitle = '';
   selectedFile: File | null = null;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  pageSize = 5;
+  currentPage = 1;
+  totalPages = 1;
 
+  constructor(private authService: AuthService, private docService: DocumentService, private router: Router) {}
 
   ngOnInit() {
-    this.documents = this.fetchDocuments();
+    this.fetchDocuments();
   }
-
-  loadDocuments() {}
 
   fetchDocuments() {
-    this.loading = false;
-    this.error = '';
-    return  [
-      {
-        id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
-        title: 'Project Plan',
-        created_at: '2025-05-15T09:30:00Z',
-        uploaded_by: 'alice',
-        processed: true,
+    this.loading = true;
+    return this.docService.getDocuments().subscribe({
+      next: (data) => {
+        this.documents = data;
+        this.totalPages = Math.ceil(this.documents.length / this.pageSize);
+        this.paginateDocuments();
+        this.loading = false;
       },
-      {
-        id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e',
-        title: 'Budget Report',
-        created_at: '2025-05-16T14:45:00Z',
-        uploaded_by: 'bob',
-        processed: false,
-      },
-      {
-        id: '3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f',
-        title: 'Meeting Minutes',
-        created_at: '2025-05-17T11:20:00Z',
-        uploaded_by: 'carol',
-        processed: true,
-      },
-      {
-        id: '4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a',
-        title: 'Design Specs',
-        created_at: '2025-05-18T08:15:00Z',
-        uploaded_by: 'dave',
-        processed: false,
-      },
-    ];
+      error: (err) => {
+        this.error = 'Error fetching documents';
+        console.error(err);
+        this.loading = false;
+        if (err.status === 404) this.router.navigate(['/login']);
+      }
+    });
+    
   }
 
-  downloadDocument(docId: string) {
-    
+  paginateDocuments() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.paginatedDocuments = this.documents.slice(start, start + this.pageSize);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.paginateDocuments();
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.paginateDocuments();
+    }
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  deleteDocument(docId:string) {
+    this.loading = true;
+    const doc = this.documents.filter(d => d.documentid === docId);
+    if (doc.length === 0) {
+      console.error('Error deleting document: Document not present');
+      this.uploaderrorMessage = 'Document not present';
+      this.loading = false;
+      return;
+    }
+
+    if(!doc[0].processed) {
+      console.error('Error deleting document: Document not processed');
+      this.uploaderrorMessage = 'You cannot delete unprocessed document';
+      this.loading = false;
+      return;
+    }
+
+    this.docService.deleteDocument(docId).subscribe({
+      next: () => {
+        console.log('Delete successful');
+        this.loading = false;
+        this.fetchDocuments();
+      },
+      error: (err) => {
+        console.error('Error deleting document:', err);
+        this.uploaderrorMessage = err.error.error;
+        this.loading = false;
+      }
+    });
   }
 
   onUploadSubmit(event: Event) {
     event.preventDefault();
     if (!this.newDocTitle || !this.selectedFile) return;
-
-    // For demo, just log the values:
-    console.log('Uploading:', this.newDocTitle, this.selectedFile);
-
-    // TODO: Add actual upload logic here (e.g., send FormData to backend)
     
-    // Reset form and hide
-    this.cancelUpload();
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-  
-    const file = input.files[0];
-    console.log('Selected file:', file);
-  
-    // TODO: Implement upload logic here
+    this.loading = true;
+    console.log('Uploading:', this.newDocTitle, this.selectedFile);
+    this.docService.uploadDocument(this.newDocTitle, this.selectedFile).subscribe({
+      next: () => {
+        console.log('Upload successful');
+        this.newDocTitle = '';
+        this.selectedFile = null;
+        this.showUploadForm = false;
+        this.fetchDocuments();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error uploading document:', err);
+        this.uploaderrorMessage = err.error.error;
+        this.loading = false;
+      }
+    });
   }
 
   cancelUpload() {
@@ -106,14 +148,34 @@ export class HomeComponent implements OnInit {
     this.selectedFile = null;
   }
 
-  refreshDocuments() {
-    // Your logic to reload the documents list, e.g. call API or reload array
-    console.log('Refresh button clicked');
-    this.loadDocuments(); // or whatever function you use to fetch docs
+  downloadDocument(docId: string, title:string) {
+    console.log('Downloading document with ID:', docId);
+    this.loading = true;
+    this.docService.downloadDocument(docId).subscribe({
+      next: (blob:any) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${title}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error downloading document:', err);
+        this.uploaderrorMessage = err.error.error;
+        this.loading = false;
+      }
+    });
   }
-  
+
   signOut() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  refreshDocuments() {
+    this.uploaderrorMessage = '';
+    this.fetchDocuments();
   }
 }
