@@ -1,17 +1,52 @@
 <div class="container mt-5">
-    <div class="card p-4 shadow-sm">
-      <h2 class="text-center text-primary mb-4">Login</h2>
-      <form (ngSubmit)="onSubmit()">
-        <div class="mb-3">
-          <label for="email" class="form-label">Email</label>
-          <input type="email" id="email" class="form-control" [(ngModel)]="email" name="email" required />
+  <div class="card p-4 shadow-sm" *ngIf="!isLoading">
+    <h2 class="text-center text-primary mb-4">Login</h2>
+    <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
+      <p *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</p>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          [(ngModel)]="email"
+          name="email"
+          required
+          email
+          #emailCtrl="ngModel"
+          [ngClass]="{ 'is-invalid': emailCtrl.invalid && emailCtrl.touched }"
+        />
+        <div *ngIf="emailCtrl.invalid && emailCtrl.touched" class="invalid-feedback">
+          <span *ngIf="emailCtrl.errors?.['required']">Email is required.</span>
+          <span *ngIf="emailCtrl.errors?.['email']">Enter a valid email address.</span>
         </div>
-        <div class="mb-3">
-          <label for="password" class="form-label">Password</label>
-          <input type="password" id="password" class="form-control" [(ngModel)]="password" name="password" required />
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          id="password"
+          class="form-control"
+          [(ngModel)]="password"
+          name="password"
+          required
+          minlength="9"
+          #passwordCtrl="ngModel"
+          [ngClass]="{ 'is-invalid': passwordCtrl.invalid && passwordCtrl.touched }"
+        />
+        <div *ngIf="passwordCtrl.invalid && passwordCtrl.touched" class="invalid-feedback">
+          <span *ngIf="passwordCtrl.errors?.['required']">Password is required.</span>
+          <span *ngIf="passwordCtrl.errors?.['minlength']">
+            Password must be at least 9 characters long.
+          </span>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Login</button>
-      </form>
-    </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100" [disabled]="loginForm.invalid">Login</button>
+    </form>
+    <button class="btn btn-primary btn-register" [routerLink]="['/register']">Register with us</button>
   </div>
-  
+  <app-loader [isLoading]="isLoading"></app-loader>
+</div>

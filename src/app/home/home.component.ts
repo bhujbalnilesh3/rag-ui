@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -27,7 +29,8 @@ export class HomeComponent implements OnInit {
   newDocTitle = '';
   selectedFile: File | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private authService: AuthService, private router: Router) {}
+
 
   ngOnInit() {
     this.documents = this.fetchDocuments();
@@ -109,5 +112,8 @@ export class HomeComponent implements OnInit {
     this.loadDocuments(); // or whatever function you use to fetch docs
   }
   
-  signOut() {}
+  signOut() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 }

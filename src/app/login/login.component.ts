@@ -1,23 +1,43 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../services/auth/auth.service';
+import { RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
+import { LoaderComponent } from '../loader/loader.component';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule, RouterModule, LoaderComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
   email: string = '';
   password: string = '';
+  errorMessage: string = '';
+  isLoading: boolean = false;
+
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     if (this.email && this.password) {
-      console.log('Email:', this.email);
-      console.log('Password:', this.password);
-      alert('Login Successful!');
+      debugger;
+      this.isLoading = true;
+      this.authService.login(this.email, this.password).subscribe({
+        next: (response) => {
+          this.authService.setToken(response.token);
+          this.isLoading = false;
+          alert('Login Successful!');
+          this.router.navigate(['/home']);
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.message;
+        },
+      });
     } else {
-      alert('Please fill out all fields.');
+      this.errorMessage = 'Please fill out all fields.';
     }
   }
 }
