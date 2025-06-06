@@ -28,7 +28,6 @@ export class LoginComponent {
 
   onSubmit() {
     if (this.email && this.password) {
-      debugger;
       this.isLoading = true;
       this.authService.login(this.email, this.password).subscribe({
         next: (response) => {
