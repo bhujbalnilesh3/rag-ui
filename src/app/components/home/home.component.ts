@@ -56,7 +56,10 @@ export class HomeComponent implements OnInit {
         this.error = 'Error fetching documents';
         console.error(err);
         this.loading = false;
-        if (err.status === 404) this.router.navigate(['/login']);
+        if (err.status === 401) {
+          this.authService.logout();
+          this.router.navigate(['/login'])
+        }
       }
     });
     
